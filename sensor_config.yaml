@@ -1,0 +1,80 @@
+# ============================================================
+# Sensor Configuration — Central Registry
+# ============================================================
+# Add a new block for each sensor. The top-level key MUST match
+# the root-level key in your Firebase RTDB.
+#
+# Fields:
+#   enabled            : true/false — bridge only polls enabled sensors
+#   description        : human-readable label (for logging & inspect)
+#   fields.distance    : Firebase field name containing distance/level value
+#   fields.battery     : Firebase field name containing battery voltage
+#   fields.solar       : Firebase field name containing solar voltage
+#   fields.timestamp   : Firebase field name containing timestamp
+#   distance_encoding  : "string" (extract digits from "R0231") | "numeric" | "auto" (default)
+#   timestamp_format   : "epoch_s" | "epoch_ms" | "epoch_auto" (default) | "iso"
+#
+# Defaults (if omitted):
+#   fields.distance  → tries: dist_cm, distance_cm, ultrasound, level, distance
+#   fields.battery   → tries: bat_volt, battery_voltage
+#   fields.solar     → tries: solar_volt, solar_voltage
+#   fields.timestamp → tries: timestamp
+#   distance_encoding → "auto"
+#   timestamp_format  → "epoch_auto"
+#
+# After editing, restart the bridge service to pick up changes.
+# Run `uv run python src/inspect_firebase.py` to verify.
+# ============================================================
+
+sensors:
+
+  floodmonitor1:
+    enabled: true
+    description: "Main sensor at northern bridge support"
+    fields:
+      distance: "ultrasound"
+      battery: "bat_volt"
+      solar: "solar_volt"
+      timestamp: "timestamp"
+    distance_encoding: "string"
+    timestamp_format: "epoch_s"
+
+  floodmonitor2:
+    enabled: true
+    description: "Southern drainage system"
+    fields:
+      distance: "ultrasound_cm"
+      battery: "bat_volt"
+      solar: "solar_volt"
+      timestamp: "timestamp"
+    distance_encoding: "string"
+    timestamp_format: "epoch_s"
+
+  LoRaWAN:
+    enabled: true
+    description: "Central market early warning (LoRaWAN indoor)"
+    fields:
+      distance: "distance_cm"
+      timestamp: "timestamp"
+    distance_encoding: "numeric"
+    timestamp_format: "epoch_ms"
+
+  # ── New sensors (disabled until verified) ──────────────────
+
+  # Nadi_Mitra_1:
+  #   enabled: false
+  #   description: "Nadi Mitra Sensor 1 — mixed schemas, needs investigation"
+  #   fields:
+  #     distance: "water_level"
+  #     timestamp: "timestamp"
+  #   distance_encoding: "numeric"
+  #   timestamp_format: "iso"
+
+  # Nadi_Mitra_2:
+  #   enabled: false
+  #   description: "Nadi Mitra Sensor 2"
+  #   fields:
+  #     distance: "level_cm"
+  #     timestamp: "timestamp"
+  #   distance_encoding: "numeric"
+  #   timestamp_format: "iso"

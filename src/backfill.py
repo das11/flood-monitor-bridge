@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 # Ensure we can import from src
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.main import clean_sensor_data, FIREBASE_DB_URL, INFLUX_URL, INFLUX_TOKEN, INFLUX_ORG, INFLUX_BUCKET, SERVICE_ACCOUNT_KEY
+from src.main import clean_sensor_data, load_sensor_config, FIREBASE_DB_URL, INFLUX_URL, INFLUX_TOKEN, INFLUX_ORG, INFLUX_BUCKET, SERVICE_ACCOUNT_KEY
 
 # Setup Logging
 logging.basicConfig(
@@ -74,6 +74,9 @@ def backfill_data():
         logger.info("No data found in Firebase.")
         return
 
+    # 3.5 Load sensor configs
+    sensor_configs = load_sensor_config()
+
     points = []
     
     # 4. Process Data
@@ -81,11 +84,12 @@ def backfill_data():
     if isinstance(snapshot, dict):
         for sensor_key, sensor_data in snapshot.items():
             logger.info(f"Processing sensor: {sensor_key}")
+            cfg = sensor_configs.get(sensor_key)
             if isinstance(sensor_data, dict):
                 for push_id, record in sensor_data.items():
                     # Construct key like path
                     key = f"/{sensor_key}/{push_id}"
-                    pt = clean_sensor_data(key, record)
+                    pt = clean_sensor_data(key, record, cfg)
                     if pt:
                         points.append(pt)
             else:
