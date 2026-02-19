@@ -27,8 +27,9 @@ COPY --from=builder /app/.venv /app/.venv
 ENV VIRTUAL_ENV=/app/.venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
-# Copy source code
+# Copy source code and config
 COPY src/ src/
+COPY sensor_config.yaml .
 COPY serviceAccountKey.json . 
 
 # Run the application

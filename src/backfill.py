@@ -79,12 +79,14 @@ def backfill_data():
 
     points = []
     
-    # 4. Process Data
-    # Snapshot is likely a dict: {'floodmonitor1': {...}, 'floodmonitor2': {...}}
+    # 4. Process Data — only backfill sensors that are enabled in config
     if isinstance(snapshot, dict):
         for sensor_key, sensor_data in snapshot.items():
-            logger.info(f"Processing sensor: {sensor_key}")
             cfg = sensor_configs.get(sensor_key)
+            if cfg is None:
+                logger.info(f"Skipping {sensor_key} — not in sensor_config.yaml")
+                continue
+            logger.info(f"Processing sensor: {sensor_key}")
             if isinstance(sensor_data, dict):
                 for push_id, record in sensor_data.items():
                     # Construct key like path

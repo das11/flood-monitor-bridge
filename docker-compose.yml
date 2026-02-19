@@ -8,6 +8,8 @@ services:
       - ./serviceAccountKey.json:/app/serviceAccountKey.json
       # Mount source code for hot-reloading/dev without rebuild
       - ./src:/app/src
+      # Mount sensor config for runtime changes without rebuild
+      - ./sensor_config.yaml:/app/sensor_config.yaml
     env_file:
       - .env
     dns:
@@ -44,6 +46,21 @@ services:
       - influxdb
     volumes:
       - grafana_data:/var/lib/grafana
+
+  dashboard:
+    build:
+      context: ../public-dashboard-ui
+      args:
+        VITE_INFLUX_URL: http://influxdb:8086
+        VITE_INFLUX_TOKEN: my-super-secret-auth-token
+        VITE_INFLUX_ORG: kabir-das-org
+        VITE_INFLUX_BUCKET: flood_monitoring
+    container_name: flood-monitor-dashboard
+    restart: always
+    ports:
+      - "5173:80"
+    depends_on:
+      - influxdb
 
 volumes:
   influxdb_data:

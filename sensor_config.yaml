@@ -14,6 +14,16 @@
 #   distance_encoding  : "string" (extract digits from "R0231") | "numeric" | "auto" (default)
 #   timestamp_format   : "epoch_s" | "epoch_ms" | "epoch_auto" (default) | "iso"
 #
+# Image Paths (optional — only for sensors with cameras):
+#   image_paths:
+#     <view_name>:                     # e.g. "front", "side", "cam1"
+#       prefix: "device/folder"        # GCS path after bucket name
+#       date_folders: true             # true = prefix/YYYY-MM-DD/; false = flat
+#       filename_pattern: "*.jpg"      # glob filter (default: "*.jpg")
+#       timestamp_source: "blob"       # "blob" (GCS metadata) | "filename"
+#       timestamp_regex: "..."         # regex to extract datetime from filename
+#                                      # (only needed if timestamp_source: filename)
+#
 # Defaults (if omitted):
 #   fields.distance  → tries: dist_cm, distance_cm, ultrasound, level, distance
 #   fields.battery   → tries: bat_volt, battery_voltage
@@ -29,7 +39,7 @@
 sensors:
 
   floodmonitor1:
-    enabled: true
+    enabled: false
     description: "Main sensor at northern bridge support"
     fields:
       distance: "ultrasound"
@@ -49,6 +59,21 @@ sensors:
       timestamp: "timestamp"
     distance_encoding: "string"
     timestamp_format: "epoch_s"
+    image_paths:
+      front:
+        prefix: "dev2/front"
+        date_folders: true
+        filename_pattern: "*.jpg"
+        timestamp_source: "filename"
+        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1771511518_front.jpg → epoch secs
+        timestamp_format: "epoch_s"
+      side:
+        prefix: "dev2/side"
+        date_folders: true
+        filename_pattern: "*.jpg"
+        timestamp_source: "filename"
+        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1771511518_side.jpg → epoch secs
+        timestamp_format: "epoch_s"
 
   LoRaWAN:
     enabled: true
@@ -58,6 +83,23 @@ sensors:
       timestamp: "timestamp"
     distance_encoding: "numeric"
     timestamp_format: "epoch_ms"
+  
+  Nadi_Mitra_2:
+    enabled: true
+    description: "Nadi Mitra Sensor 2"
+    fields:
+      distance: "level_cm"
+      timestamp: "timestamp"
+    distance_encoding: "numeric"
+    timestamp_format: "iso"
+    image_paths:
+      default:
+        prefix: "photos/Nadi_Mitra_2"
+        date_folders: false
+        filename_pattern: "*.jpg"
+        timestamp_source: "filename"
+        timestamp_regex: '(\d{4})(\d{2})(\d{2})_(\d{2})(\d{2})(\d{2})\.jpg'
+        timestamp_format: "datetime"
 
   # ── New sensors (disabled until verified) ──────────────────
 
@@ -70,11 +112,4 @@ sensors:
   #   distance_encoding: "numeric"
   #   timestamp_format: "iso"
 
-  # Nadi_Mitra_2:
-  #   enabled: false
-  #   description: "Nadi Mitra Sensor 2"
-  #   fields:
-  #     distance: "level_cm"
-  #     timestamp: "timestamp"
-  #   distance_encoding: "numeric"
-  #   timestamp_format: "iso"
+

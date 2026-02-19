@@ -1,0 +1,81 @@
+services:
+  # ── Nginx Gateway (single entry point) ─────────────────────
+  gateway:
+    image: nginx:alpine
+    container_name: flood-monitor-gateway
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.gateway.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - dashboard
+      - grafana
+      - influxdb
+
+  # ── Dashboard SPA ──────────────────────────────────────────
+  dashboard:
+    image: daskabir/flood-monitor-dashboard:latest
+    build:
+      context: ../public-dashboard-ui
+      args:
+        VITE_INFLUX_URL: /influxdb
+        VITE_INFLUX_TOKEN: my-super-secret-auth-token
+        VITE_INFLUX_ORG: kabir-das-org
+        VITE_INFLUX_BUCKET: flood_monitoring
+        VITE_BASE_PATH: /dashboard/
+    container_name: flood-monitor-dashboard
+    restart: always
+    # No port exposed — accessed only through gateway
+
+    # ── Firebase → InfluxDB Bridge ─────────────────────────────
+  bridge:
+    image: daskabir/flood-monitor-bridge:latest
+    build: .
+    container_name: flood-monitor-bridge
+    restart: always
+    volumes:
+      - ./serviceAccountKey.json:/app/serviceAccountKey.json
+      - ./src:/app/src
+      - ./sensor_config.yaml:/app/sensor_config.yaml
+    env_file:
+      - .env
+    dns:
+      - 8.8.8.8
+    depends_on:
+      - influxdb
+
+  # ── InfluxDB ───────────────────────────────────────────────
+  influxdb:
+    image: influxdb:2
+    container_name: flood-monitor-influxdb
+    # No port exposed — accessed only through gateway
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password123
+      - DOCKER_INFLUXDB_INIT_ORG=kabir-das-org
+      - DOCKER_INFLUXDB_INIT_BUCKET=flood_monitoring
+      - DOCKER_INFLUXDB_INIT_RETENTION=0s
+      - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=my-super-secret-auth-token
+
+  # ── Grafana ────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    container_name: flood-monitor-grafana
+    # No port exposed — accessed only through gateway
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SERVER_ROOT_URL=%(protocol)s://%(domain)s/grafana/
+      - GF_SERVER_SERVE_FROM_SUB_PATH=true
+    depends_on:
+      - influxdb
+    volumes:
+      - grafana_data:/var/lib/grafana
+
+volumes:
+  influxdb_data:
+  grafana_data:

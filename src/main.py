@@ -28,6 +28,7 @@ load_dotenv()
 # Configuration
 FIREBASE_DB_URL = os.getenv("FIREBASE_DB_URL")
 SERVICE_ACCOUNT_KEY = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "serviceAccountKey.json")
+FIREBASE_STORAGE_BUCKET = os.getenv("FIREBASE_STORAGE_BUCKET")
 
 INFLUX_URL = os.getenv("INFLUX_URL")
 INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")
@@ -177,6 +178,10 @@ def clean_sensor_data(key: str, data: Dict[str, Any],
     falls back to legacy heuristic chain otherwise.
     """
     try:
+        # 0. Guard: data must be a dict (some Firebase records are plain strings)
+        if not isinstance(data, dict):
+            return None
+
         # 1. Extract Sensor ID from path
         sensor_id = key.split('/')[1] if '/' in key else "unknown_sensor"
 
@@ -249,14 +254,34 @@ def main():
         return
 
     cred = credentials.Certificate(SERVICE_ACCOUNT_KEY)
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': FIREBASE_DB_URL
-    })
+    firebase_init_opts = {'databaseURL': FIREBASE_DB_URL}
+    if FIREBASE_STORAGE_BUCKET:
+        firebase_init_opts['storageBucket'] = FIREBASE_STORAGE_BUCKET
+    firebase_admin.initialize_app(cred, firebase_init_opts)
     logger.info(f"Connected to Firebase at {FIREBASE_DB_URL}")
 
     # 3. Load sensor config
     sensor_configs = load_sensor_config()
     SENSORS = list(sensor_configs.keys())
+
+    # 3b. Start image poller thread (if any sensor has image_paths)
+    has_image_sensors = any(
+        cfg.get("image_paths") for cfg in sensor_configs.values()
+    )
+    if has_image_sensors and FIREBASE_STORAGE_BUCKET:
+        from image_poller import start_image_poller_thread
+        start_image_poller_thread(
+            sensor_configs=sensor_configs,
+            write_api=write_api,
+            bucket_name=FIREBASE_STORAGE_BUCKET,
+            influx_bucket=bucket,
+            poll_interval=120  # 2 minutes, matching sensor upload cadence
+        )
+    elif has_image_sensors:
+        logger.warning(
+            "Sensors have image_paths configured but FIREBASE_STORAGE_BUCKET "
+            "is not set. Image polling disabled."
+        )
 
     # 4. Define Listener
     def listener(event):

@@ -109,6 +109,27 @@ from(bucket: "flood_monitoring")
   |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)
   |> yield(name: "recent_trend")
 ```
+
+## InfluxDB Point Schema
+```
+Bucket: flood_monitoring
+│
+└── _measurement: "sensor_reading"     ← the "table"
+    │
+    ├── Tags (indexed filters):
+    │   └── sensor_id                  ← filter by sensor
+    │
+    ├── Fields (the data):
+    │   ├── dist_cm
+    │   ├── bat_volt
+    │   ├── solar_volt
+    │   └── fb_key
+    │
+    └── _time                          ← every point has a timestamp
+
+```
+
+
 ## Useful Queries
 
 ### View Last Synced Firebase Key (State Recovery Check)
@@ -124,3 +145,5 @@ from(bucket: "flood_monitoring")
   |> group(columns: ["sensor_id"])
   |> yield(name: "last_synced_keys")
 ```
+
+
