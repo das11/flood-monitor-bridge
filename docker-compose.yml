@@ -51,7 +51,7 @@ services:
     build:
       context: ../public-dashboard-ui
       args:
-        VITE_INFLUX_URL: http://influxdb:8086
+        VITE_INFLUX_URL: http://localhost:8086
         VITE_INFLUX_TOKEN: my-super-secret-auth-token
         VITE_INFLUX_ORG: kabir-das-org
         VITE_INFLUX_BUCKET: flood_monitoring
