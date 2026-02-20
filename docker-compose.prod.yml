@@ -36,7 +36,6 @@ services:
     restart: always
     volumes:
       - ./serviceAccountKey.json:/app/serviceAccountKey.json
-      - ./src:/app/src
       - ./sensor_config.yaml:/app/sensor_config.yaml
     env_file:
       - .env
@@ -49,7 +48,8 @@ services:
   influxdb:
     image: influxdb:2
     container_name: flood-monitor-influxdb
-    # No port exposed — accessed only through gateway
+    ports:
+      - "8086:8086" # InfluxDB UI (cannot serve from sub-path)
     volumes:
       - influxdb_data:/var/lib/influxdb2
     environment:
@@ -75,6 +75,16 @@ services:
       - influxdb
     volumes:
       - grafana_data:/var/lib/grafana
+
+  # ── Dozzle (log viewer) ────────────────────────────────────
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: flood-monitor-dozzle
+    restart: always
+    environment:
+      - DOZZLE_BASE=/dozzle
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   influxdb_data:
