@@ -82,7 +82,9 @@ services:
     container_name: flood-monitor-dozzle
     restart: always
     environment:
-      - DOZZLE_BASE=/dozzle
+      DOZZLE_BASE: /dozzle
+      DOZZLE_ENABLE_ACTIONS: true
+      DOZZLE_ENABLE_SHELL: true
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
 

@@ -1,5 +1,29 @@
 [
     {
+        "id": "floodmonitor1",
+        "name": "Flood Monitor 1",
+        "description": "Monitoring water levels in the southern drainage system.",
+        "position": [
+            27.004908,
+            93.044941
+        ],
+        "thresholds": {
+            "low": 150,
+            "medium": 300,
+            "high": 500
+        },
+        "station_id": "floodmonitor1",
+        "image_views": [
+            "front",
+            "side"
+        ],
+        "default_data": {
+            "level": 512,
+            "battery": 11.8,
+            "solar": 13.5
+        }
+    },
+    {
         "id": "floodmonitor2",
         "name": "Flood Monitor 2",
         "description": "Monitoring water levels in the southern drainage system.",

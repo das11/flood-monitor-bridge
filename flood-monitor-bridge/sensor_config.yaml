@@ -39,7 +39,7 @@
 sensors:
 
   floodmonitor1:
-    enabled: false
+    enabled: true
     description: "Main sensor at northern bridge support"
     fields:
       distance: "ultrasound"
