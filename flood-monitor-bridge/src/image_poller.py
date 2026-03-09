@@ -239,6 +239,14 @@ def _poll_once(
                     if not fnmatch.fnmatch(basename.lower(), filename_pattern.lower()):
                         continue
 
+                    # Skip 0-byte (empty) images
+                    if blob.size is not None and blob.size == 0:
+                        _seen_blobs[track_key].add(blob_name)
+                        logger.debug(
+                            f"[{track_key}] Skipping 0-byte blob: {basename}"
+                        )
+                        continue
+
                     # Make it public and get the URL
                     try:
                         blob.make_public()

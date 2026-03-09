@@ -48,6 +48,21 @@ sensors:
       timestamp: "timestamp"
     distance_encoding: "string"
     timestamp_format: "epoch_s"
+    image_paths:
+      front:
+        prefix: "front"
+        date_folders: true
+        filename_pattern: "*.jpg"
+        timestamp_source: "filename"
+        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1772994746_front.jpg → epoch secs
+        timestamp_format: "epoch_s"
+      side:
+        prefix: "side"
+        date_folders: true
+        filename_pattern: "*.jpg"
+        timestamp_source: "filename"
+        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1772994746_side.jpg → epoch secs
+        timestamp_format: "epoch_s"
 
   floodmonitor2:
     enabled: true
