@@ -140,7 +140,7 @@ def _parse_timestamp(raw_ts: Any, fmt: str) -> datetime.datetime:
             ts_str = str(raw_ts).strip()
             for pattern in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S",
                             "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%f",
-                            "%Y-%m-%dT%H:%M:%SZ"):
+                            "%Y-%m-%dT%H:%M:%SZ", "%Y%m%d-%H%M%S"):
                 try:
                     dt = datetime.datetime.strptime(ts_str, pattern)
                     return dt.replace(tzinfo=datetime.timezone.utc)
@@ -220,6 +220,61 @@ def clean_sensor_data(key: str, data: Dict[str, Any],
 
     except Exception as e:
         logger.error(f"Error processing data for key {key}: {e}")
+        return None
+
+
+def extract_image_point(key: str, data: Dict[str, Any],
+                        sensor_cfg: Optional[Dict[str, Any]] = None) -> Optional[Point]:
+    """
+    If the sensor config has an 'image_field' (e.g. "photo_url"), extract the
+    image URL from the RTDB record and return a sensor_image InfluxDB Point.
+
+    This handles sensors like Nadi_Mitra_1 where the device embeds the image
+    URL directly in the RTDB record, rather than uploading to GCS storage.
+
+    Returns None if no image_field is configured, the field is missing, or
+    the value is not a valid URL (e.g. "Camera Offline").
+    """
+    if not sensor_cfg or not isinstance(data, dict):
+        return None
+
+    image_field = sensor_cfg.get("image_field")
+    if not image_field:
+        return None
+
+    image_url = data.get(image_field)
+    if not image_url or not isinstance(image_url, str):
+        return None
+
+    # Skip placeholder / offline values
+    if not image_url.startswith("http"):
+        return None
+
+    try:
+        sensor_id = key.split('/')[1] if '/' in key else "unknown_sensor"
+
+        # Parse the timestamp the same way as the reading
+        fields_cfg = sensor_cfg.get("fields", {})
+        ts_field = fields_cfg.get("timestamp", "timestamp")
+        ts_format = sensor_cfg.get("timestamp_format", "epoch_auto")
+        raw_ts = data.get(ts_field, time.time())
+        dt_obj = _parse_timestamp(raw_ts, ts_format)
+
+        # Extract filename from the URL
+        filename = image_url.rstrip("/").split("/")[-1]
+
+        point = (
+            Point("sensor_image")
+            .tag("sensor_id", sensor_id)
+            .tag("view", "default")
+            .field("image_url", image_url)
+            .field("filename", filename)
+            .time(dt_obj)
+        )
+        return point
+
+    except Exception as e:
+        logger.error(f"Error extracting image point for key {key}: {e}")
         return None
 
 def main():
@@ -308,6 +363,8 @@ def main():
                                      if isinstance(record, dict):
                                          pt = clean_sensor_data(f"/{sensor_key}/{push_id}", record, cfg)
                                          if pt: points.append(pt)
+                                         img_pt = extract_image_point(f"/{sensor_key}/{push_id}", record, cfg)
+                                         if img_pt: points.append(img_pt)
                         
                         if points:
                             write_api.write(bucket=bucket, record=points)
@@ -326,6 +383,8 @@ def main():
                                 if isinstance(record, dict):
                                     pt = clean_sensor_data(f"/{sensor_id}/{push_id}", record, cfg)
                                     if pt: points.append(pt)
+                                    img_pt = extract_image_point(f"/{sensor_id}/{push_id}", record, cfg)
+                                    if img_pt: points.append(img_pt)
                             if points:
                                 write_api.write(bucket=bucket, record=points)
                                 logger.info(f"Wrote {len(points)} records for sensor {sensor_id}")
@@ -334,9 +393,11 @@ def main():
                         sensor_id = parts[0]
                         cfg = sensor_configs.get(sensor_id)
                         pt = clean_sensor_data(event.path, event.data, cfg)
-                        if pt:
-                            write_api.write(bucket=bucket, record=pt)
-                            logger.info(f"Wrote 1 record: {event.path}")
+                        img_pt = extract_image_point(event.path, event.data, cfg)
+                        write_points = [p for p in (pt, img_pt) if p]
+                        if write_points:
+                            write_api.write(bucket=bucket, record=write_points)
+                            logger.info(f"Wrote {len(write_points)} point(s): {event.path}")
                             
         except Exception as e:
             logger.error(f"Listener Error: {e}")
@@ -461,6 +522,8 @@ def main():
                                 cfg = sensor_configs.get(sensor)
                                 pt = clean_sensor_data(f"/{sensor}/{key}", record, cfg)
                                 if pt: points.append(pt)
+                                img_pt = extract_image_point(f"/{sensor}/{key}", record, cfg)
+                                if img_pt: points.append(img_pt)
                             
                             new_last_key = key # Advance cursor
                         

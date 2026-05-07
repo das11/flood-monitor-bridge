@@ -99,7 +99,7 @@ def classify_timestamp(value: Any) -> str:
             ts_str = value.strip()
             for pattern in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S",
                             "%Y-%m-%d %H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S.%f",
-                            "%Y-%m-%dT%H:%M:%SZ"):
+                            "%Y-%m-%dT%H:%M:%SZ", "%Y%m%d-%H%M%S"):
                 try:
                     datetime.datetime.strptime(ts_str, pattern)
                     return "iso-datetime"

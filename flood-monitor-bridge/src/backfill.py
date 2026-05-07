@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 # Ensure we can import from src
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-from src.main import clean_sensor_data, load_sensor_config, FIREBASE_DB_URL, INFLUX_URL, INFLUX_TOKEN, INFLUX_ORG, INFLUX_BUCKET, SERVICE_ACCOUNT_KEY
+from src.main import clean_sensor_data, extract_image_point, load_sensor_config, FIREBASE_DB_URL, INFLUX_URL, INFLUX_TOKEN, INFLUX_ORG, INFLUX_BUCKET, SERVICE_ACCOUNT_KEY
 
 # Setup Logging
 logging.basicConfig(
@@ -94,6 +94,9 @@ def backfill_data():
                     pt = clean_sensor_data(key, record, cfg)
                     if pt:
                         points.append(pt)
+                    img_pt = extract_image_point(key, record, cfg)
+                    if img_pt:
+                        points.append(img_pt)
             else:
                 logger.warning(f"Unexpected structure for {sensor_key}")
 

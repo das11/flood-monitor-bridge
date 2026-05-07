@@ -11,7 +11,15 @@ const SensorPicker = ({ sensors, selectedId, onSelect }) => {
                 <select
                     className="native-select"
                     value={selectedId}
-                    onChange={(e) => onSelect(e.target.value)}
+                    onChange={(e) => {
+                        const selectedVal = e.target.value;
+                        const sensor = sensors.find(s => s.id === selectedVal);
+                        if (sensor && sensor.external_url) {
+                            window.open(sensor.external_url, "_blank", "noopener,noreferrer");
+                        } else {
+                            onSelect(selectedVal);
+                        }
+                    }}
                 >
                     {sensors.map((sensor) => (
                         <option key={sensor.id} value={sensor.id}>

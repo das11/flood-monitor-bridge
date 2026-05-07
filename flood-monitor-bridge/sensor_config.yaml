@@ -118,13 +118,15 @@ sensors:
 
   # ── New sensors (disabled until verified) ──────────────────
 
-  # Nadi_Mitra_1:
-  #   enabled: false
-  #   description: "Nadi Mitra Sensor 1 — mixed schemas, needs investigation"
-  #   fields:
-  #     distance: "water_level"
-  #     timestamp: "timestamp"
-  #   distance_encoding: "numeric"
-  #   timestamp_format: "iso"
+  Nadi_Mitra_1:
+    enabled: true
+    description: "Nadi Mitra Sensor 1 — river level monitoring"
+    fields:
+      distance: "level_cm"
+      timestamp: "timestamp"
+    distance_encoding: "numeric"
+    timestamp_format: "iso"
+    # Images are embedded as URLs in RTDB records (not in GCS storage)
+    image_field: "photo_url"
 
 

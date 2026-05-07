@@ -89,5 +89,33 @@
             "battery": 0,
             "solar": 0
         }
+    },
+    {
+        "id": "Nadi_Mitra_1",
+        "name": "Nadi Mitra 1",
+        "description": "Nadi Mitra Sensor 1 — river level monitoring.",
+        "position": [
+            27.004930,
+            93.044930
+        ],
+        "thresholds": {
+            "low": 100,
+            "medium": 250,
+            "high": 400
+        },
+        "station_id": "Nadi_Mitra_1",
+        "image_views": [
+            "default"
+        ],
+        "default_data": {
+            "level": 150,
+            "battery": 0,
+            "solar": 0
+        }
+    },
+    {
+        "id": "nodi_bindu",
+        "name": "Nodi Bindu",
+        "external_url": "https://floating-river-monitoring.web.app/"
     }
 ]
