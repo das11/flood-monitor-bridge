@@ -1,6 +1,6 @@
 [
     {
-        "id": "floodmonitor1",
+        "id": "floodmonitor_dev1",
         "name": "Flood Monitor 1",
         "description": "Monitoring water levels in the southern drainage system.",
         "position": [
@@ -8,14 +8,12 @@
             93.044941
         ],
         "thresholds": {
-            "low": 150,
-            "medium": 300,
-            "high": 500
+            "critical": 200,
+            "warn": 400
         },
-        "station_id": "floodmonitor1",
+        "station_id": "floodmonitor_dev1",
         "image_views": [
-            "front",
-            "side"
+            "default"
         ],
         "default_data": {
             "level": 512,
@@ -24,7 +22,7 @@
         }
     },
     {
-        "id": "floodmonitor2",
+        "id": "floodmonitor_dev2",
         "name": "Flood Monitor 2",
         "description": "Monitoring water levels in the southern drainage system.",
         "position": [
@@ -32,14 +30,12 @@
             93.044945
         ],
         "thresholds": {
-            "low": 150,
-            "medium": 300,
-            "high": 500
+            "critical": 200,
+            "warn": 400
         },
-        "station_id": "floodmonitor2",
+        "station_id": "floodmonitor_dev2",
         "image_views": [
-            "front",
-            "side"
+            "default"
         ],
         "default_data": {
             "level": 520,
@@ -56,13 +52,12 @@
             93.045127
         ],
         "thresholds": {
-            "low": 100,
-            "medium": 250,
-            "high": 400
+            "critical": 200,
+            "warn": 400
         },
         "station_id": "LoRaWAN",
         "default_data": {
-            "level": 120,
+            "level": 450,
             "battery": 3.7,
             "solar": 5.0
         }
@@ -76,16 +71,15 @@
             93.044935
         ],
         "thresholds": {
-            "low": 100,
-            "medium": 250,
-            "high": 400
+            "critical": 200,
+            "warn": 400
         },
         "station_id": "Nadi_Mitra_2",
         "image_views": [
             "default"
         ],
         "default_data": {
-            "level": 150,
+            "level": 450,
             "battery": 0,
             "solar": 0
         }
@@ -95,20 +89,19 @@
         "name": "Nadi Mitra 1",
         "description": "Nadi Mitra Sensor 1 — river level monitoring.",
         "position": [
-            27.004930,
-            93.044930
+            27.00493,
+            93.04493
         ],
         "thresholds": {
-            "low": 100,
-            "medium": 250,
-            "high": 400
+            "critical": 200,
+            "warn": 400
         },
         "station_id": "Nadi_Mitra_1",
         "image_views": [
             "default"
         ],
         "default_data": {
-            "level": 150,
+            "level": 450,
             "battery": 0,
             "solar": 0
         }

@@ -8,6 +8,7 @@ const RANGES = [
     { label: '6H', value: '6h' },
     { label: '24H', value: '24h' },
     { label: '7D', value: '7d' },
+    { label: '30D', value: '30d' },
 ];
 
 const WaterLevelGraph = ({ sensorId, sensorName }) => {
@@ -58,6 +59,7 @@ const WaterLevelGraph = ({ sensorId, sensorName }) => {
         if (range === '1h') durationMs = 60 * 60 * 1000;
         if (range === '6h') durationMs = 6 * 60 * 60 * 1000;
         if (range === '7d') durationMs = 7 * 24 * 60 * 60 * 1000;
+        if (range === '30d') durationMs = 30 * 24 * 60 * 60 * 1000;
 
         const step = durationMs / points;
 

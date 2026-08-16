@@ -1,8 +1,9 @@
 
 import os
 import sys
+import argparse
 import logging
-from typing import List
+from typing import List, Optional
 
 import firebase_admin
 from firebase_admin import credentials, db
@@ -20,7 +21,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-def backfill_data():
+def backfill_data(sensors: Optional[List[str]] = None):
+    """
+    Backfill historical readings from Firebase into InfluxDB.
+
+    If `sensors` is given, only those sensor keys are fetched (one targeted
+    Firebase ref per sensor) instead of downloading the entire RTDB root —
+    important once old/disabled sensor keys accumulate large record counts.
+    """
     logger.info("Starting Backfill Process...")
 
     # 1. Initialize InfluxDB Client
@@ -65,40 +73,63 @@ def backfill_data():
     
     logger.info(f"Connected to Firebase at {FIREBASE_DB_URL}")
 
-    # 3. Fetch All Data
-    logger.info("Fetching data from Firebase (this may take a while)...")
-    ref = db.reference("/")
-    snapshot = ref.get()
-
-    if not snapshot:
-        logger.info("No data found in Firebase.")
-        return
-
     # 3.5 Load sensor configs
     sensor_configs = load_sensor_config()
 
     points = []
-    
-    # 4. Process Data — only backfill sensors that are enabled in config
-    if isinstance(snapshot, dict):
-        for sensor_key, sensor_data in snapshot.items():
+
+    if sensors:
+        # 3/4. Targeted mode — fetch only the requested sensor refs directly,
+        # skipping a full-root download of unrelated (possibly huge) sensor keys.
+        for sensor_key in sensors:
             cfg = sensor_configs.get(sensor_key)
             if cfg is None:
-                logger.info(f"Skipping {sensor_key} — not in sensor_config.yaml")
+                logger.warning(f"Skipping {sensor_key} — not in sensor_config.yaml")
                 continue
-            logger.info(f"Processing sensor: {sensor_key}")
-            if isinstance(sensor_data, dict):
-                for push_id, record in sensor_data.items():
-                    # Construct key like path
-                    key = f"/{sensor_key}/{push_id}"
-                    pt = clean_sensor_data(key, record, cfg)
-                    if pt:
-                        points.append(pt)
-                    img_pt = extract_image_point(key, record, cfg)
-                    if img_pt:
-                        points.append(img_pt)
-            else:
-                logger.warning(f"Unexpected structure for {sensor_key}")
+            logger.info(f"Fetching sensor: {sensor_key}")
+            sensor_data = db.reference(f"/{sensor_key}").get()
+            if not isinstance(sensor_data, dict):
+                logger.warning(f"No data found for {sensor_key}")
+                continue
+            logger.info(f"Processing sensor: {sensor_key} ({len(sensor_data)} records)")
+            for push_id, record in sensor_data.items():
+                key = f"/{sensor_key}/{push_id}"
+                pt = clean_sensor_data(key, record, cfg)
+                if pt:
+                    points.append(pt)
+                img_pt = extract_image_point(key, record, cfg)
+                if img_pt:
+                    points.append(img_pt)
+    else:
+        # 3. Fetch All Data
+        logger.info("Fetching data from Firebase (this may take a while)...")
+        ref = db.reference("/")
+        snapshot = ref.get()
+
+        if not snapshot:
+            logger.info("No data found in Firebase.")
+            return
+
+        # 4. Process Data — only backfill sensors that are enabled in config
+        if isinstance(snapshot, dict):
+            for sensor_key, sensor_data in snapshot.items():
+                cfg = sensor_configs.get(sensor_key)
+                if cfg is None:
+                    logger.info(f"Skipping {sensor_key} — not in sensor_config.yaml")
+                    continue
+                logger.info(f"Processing sensor: {sensor_key}")
+                if isinstance(sensor_data, dict):
+                    for push_id, record in sensor_data.items():
+                        # Construct key like path
+                        key = f"/{sensor_key}/{push_id}"
+                        pt = clean_sensor_data(key, record, cfg)
+                        if pt:
+                            points.append(pt)
+                        img_pt = extract_image_point(key, record, cfg)
+                        if img_pt:
+                            points.append(img_pt)
+                else:
+                    logger.warning(f"Unexpected structure for {sensor_key}")
 
     logger.info(f"Processed {len(points)} data points.")
 
@@ -114,4 +145,9 @@ def backfill_data():
     influx_client.close()
 
 if __name__ == "__main__":
-    backfill_data()
+    parser = argparse.ArgumentParser(description="Backfill Firebase sensor readings into InfluxDB")
+    parser.add_argument("--sensors", type=str, default=None,
+                        help="Comma-separated sensor keys to backfill (default: all enabled sensors in sensor_config.yaml)")
+    args = parser.parse_args()
+    sensor_list = [s.strip() for s in args.sensors.split(",")] if args.sensors else None
+    backfill_data(sensors=sensor_list)

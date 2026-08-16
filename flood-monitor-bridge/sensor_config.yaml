@@ -38,33 +38,26 @@
 
 sensors:
 
-  floodmonitor1:
+  floodmonitor_dev1:
     enabled: true
     description: "Main sensor at northern bridge support"
     fields:
-      distance: "ultrasound"
+      distance: "ultrasound_cm"
       battery: "bat_volt"
       solar: "solar_volt"
       timestamp: "timestamp"
     distance_encoding: "string"
     timestamp_format: "epoch_s"
     image_paths:
-      front:
-        prefix: "front"
+      default:
+        prefix: "cam/floodmonitor_dev1"
         date_folders: true
         filename_pattern: "*.jpg"
         timestamp_source: "filename"
-        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1772994746_front.jpg → epoch secs
-        timestamp_format: "epoch_s"
-      side:
-        prefix: "side"
-        date_folders: true
-        filename_pattern: "*.jpg"
-        timestamp_source: "filename"
-        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1772994746_side.jpg → epoch secs
+        timestamp_regex: '(\d+)\.jpg'  # e.g. 1784972467.jpg → epoch secs
         timestamp_format: "epoch_s"
 
-  floodmonitor2:
+  floodmonitor_dev2:
     enabled: true
     description: "Southern drainage system"
     fields:
@@ -75,19 +68,12 @@ sensors:
     distance_encoding: "string"
     timestamp_format: "epoch_s"
     image_paths:
-      front:
-        prefix: "dev2/front"
+      default:
+        prefix: "cam/floodmonitor_dev2"
         date_folders: true
         filename_pattern: "*.jpg"
         timestamp_source: "filename"
-        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1771511518_front.jpg → epoch secs
-        timestamp_format: "epoch_s"
-      side:
-        prefix: "dev2/side"
-        date_folders: true
-        filename_pattern: "*.jpg"
-        timestamp_source: "filename"
-        timestamp_regex: '(\d+)_.*\.jpg'  # e.g. 1771511518_side.jpg → epoch secs
+        timestamp_regex: '(\d+)\.jpg'  # e.g. 1784972467.jpg → epoch secs
         timestamp_format: "epoch_s"
 
   LoRaWAN:

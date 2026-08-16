@@ -89,6 +89,7 @@ const getDurationQuery = (duration) => {
         case '6h': return '-6h';
         case '24h': return '-24h';
         case '7d': return '-7d';
+        case '30d': return '-30d';
         default: return '-24h';
     }
 };
@@ -102,6 +103,7 @@ export const fetchSensorHistory = async (sensorId, duration = '24h') => {
     if (duration === '6h') aggregateWindow = '5m';
     if (duration === '24h') aggregateWindow = '15m';
     if (duration === '7d') aggregateWindow = '1h';
+    if (duration === '30d') aggregateWindow = '4h';
 
     const fluxQuery = `
   from(bucket: "${bucket}")
@@ -148,6 +150,9 @@ export const fetchSensorImages = async (sensorId, view = 'front', duration = '24
     if (!sensorId) return null;
 
     const rangeStart = getDurationQuery(duration);
+    // At 30D a sensor can produce 10k+ images, too many to render as thumbnails.
+    // Evenly downsample to a manageable count instead of returning everything.
+    const downsample = duration === '30d' ? '\n    |> sample(n: 60, pos: 0, column: "_time")' : '';
 
     const fluxQuery = `
   from(bucket: "${bucket}")
@@ -156,7 +161,7 @@ export const fetchSensorImages = async (sensorId, view = 'front', duration = '24
     |> filter(fn: (r) => r["sensor_id"] == "${sensorId}")
     |> filter(fn: (r) => r["view"] == "${view}")
     |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
-    |> sort(columns: ["_time"])
+    |> sort(columns: ["_time"])${downsample}
   `;
 
     try {

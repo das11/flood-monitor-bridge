@@ -4,16 +4,18 @@ import PropTypes from "prop-types";
 import "./Gauge.css";
 
 const Gauge = ({ level, thresholds, maxLevel = 1000 }) => {
-    // Determine status color class
+    // Sensors report distance-to-water: a SMALLER reading means the water is
+    // closer to the sensor (higher flood risk), so the alert direction is
+    // inverted relative to a typical "higher = worse" gauge.
     const getStatusColor = (level, thresholds) => {
-        if (level >= thresholds.high) return "#ef4444";
-        if (level >= thresholds.medium) return "#eab308";
+        if (level < thresholds.critical) return "#ef4444";
+        if (level < thresholds.warn) return "#eab308";
         return "#3b82f6";
     };
 
     const getFillClass = (level, thresholds) => {
-        if (level >= thresholds.high) return "fill-red";
-        if (level >= thresholds.medium) return "fill-yellow";
+        if (level < thresholds.critical) return "fill-red";
+        if (level < thresholds.warn) return "fill-yellow";
         return "fill-blue";
     };
 
@@ -72,7 +74,7 @@ const Gauge = ({ level, thresholds, maxLevel = 1000 }) => {
             <div className="status-display">
                 <span className="status-indicator" style={{ backgroundColor: statusColor }}></span>
                 <span>
-                    {level >= thresholds.high ? "High Alert" : level >= thresholds.medium ? "Elevated Levels" : "Normal Levels"}
+                    {level < thresholds.critical ? "High Alert" : level < thresholds.warn ? "Elevated Levels" : "Normal Levels"}
                 </span>
             </div>
         </div>
@@ -82,9 +84,8 @@ const Gauge = ({ level, thresholds, maxLevel = 1000 }) => {
 Gauge.propTypes = {
     level: PropTypes.number.isRequired,
     thresholds: PropTypes.shape({
-        low: PropTypes.number,
-        medium: PropTypes.number,
-        high: PropTypes.number,
+        critical: PropTypes.number,
+        warn: PropTypes.number,
     }).isRequired,
     maxLevel: PropTypes.number,
 };

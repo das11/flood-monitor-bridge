@@ -8,6 +8,7 @@ const RANGES = [
     { label: '6H', value: '6h' },
     { label: '24H', value: '24h' },
     { label: '7D', value: '7d' },
+    { label: '30D', value: '30d' },
 ];
 
 const ImageTimeline = ({ sensorId, imageViews }) => {
